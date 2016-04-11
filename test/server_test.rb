@@ -1,8 +1,5 @@
-require "minitest/autorun"
-require "minitest/pride"
-require "./server"
-require "faraday"
-require "pry"
+require "./lib/server"
+require "./test/test_helper"
 
 class ServerTest < Minitest::Test
 
