@@ -19,6 +19,7 @@ class Server
       @count_requests += 1
       get_request
       parse_request
+      check_the_path
       @client.close
     end
   end
@@ -33,44 +34,47 @@ class Server
     verb = @request_lines[0].split[0]
     path = @request_lines[0].split[1]
     protocol = @request_lines[0].split[2]
-    @request_hash = {"verb" => verb, "path" => path, "protocol" => protocol}
-    @request_lines[1...@request_lines.length].each do |line|
+    host = @request_lines[1].split(': ')[1].split(':')[0]
+    port = @request_lines[1].split(': ')[1].split(':')[1]
+    @request_hash = {"verb" => verb, "path" => path, "protocol" => protocol, "host" => host, "port" => port}
+    @request_lines[2...@request_lines.length].each do |line|
       new_variable = line.split(': ')
       @request_hash[new_variable[0]] = new_variable[1]
     end
-    check_the_path
   end
 
   def check_the_path
     if @request_hash["path"] == "/"
+      send_response
       @client.puts @request_hash
     elsif @request_hash["path"] == "/hello"
+      send_response
       hello_world
     elsif @request_hash["path"] == "/shutdown"
+      send_response
       shutdown
     elsif @request_hash["path"] == "/datetime"
+      send_response
       datetime
     end
   end
 
   def send_response
-
+    status = "HTTP/1.1 200 OK\n\r"
+    @client.puts status
   end
 
   def hello_world
-      output = "<html><head></head><body>#{"Hello World (#{@count_requests})\n This is our request: #{@request_lines}"}</body></html>"
-        @client.puts output
+    @client.puts "<html><head></head><body>#{"Hello World (#{@count_requests})\n This is our request: #{@request_lines}"}</body></html>"
   end
 
   def shutdown
-    output = "<html><head></head><body>#{"Total Requests: #{@count_requests}"}</body></html>"
-    @client.puts output
+    @client.puts "<html><head></head><body>#{"Total Requests: #{@count_requests}"}</body></html>"
     @tcp_server.close
   end
 
   def datetime
-    output = "<html><head></head><body>#{Time.now.strftime('%l:%M%p on %A, %B %e, %Y')}</body></html>"
-    @client.puts output
+    @client.puts "<html><head></head><body>#{Time.now.strftime('%l:%M%p on %A, %B %e, %Y')}</body></html>"
   end
 
 # 11:07AM on Sunday, November 1, 2015.
