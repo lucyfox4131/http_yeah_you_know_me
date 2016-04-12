@@ -1,4 +1,5 @@
 require 'socket'
+require './lib/request'
 
 class Server
 
@@ -6,9 +7,8 @@ class Server
 
   def initialize
     @tcp_server = TCPServer.new(9292)
-    # @client #@tcp_server.accept
+    @request_object = Request.new
     @count_requests = 0
-    # @request_lines = []
     start_server
   end
 
@@ -18,7 +18,7 @@ class Server
       @client = @tcp_server.accept
       @count_requests += 1
       get_request
-      parse_request
+      @request_object.parse_request(@request_lines)
       check_the_path
       @client.close
     end
@@ -30,30 +30,17 @@ class Server
     end
   end
 
-  def parse_request
-    verb = @request_lines[0].split[0]
-    path = @request_lines[0].split[1]
-    protocol = @request_lines[0].split[2]
-    host = @request_lines[1].split(': ')[1].split(':')[0]
-    port = @request_lines[1].split(': ')[1].split(':')[1]
-    @request_hash = {"verb" => verb, "path" => path, "protocol" => protocol, "host" => host, "port" => port}
-    @request_lines[2...@request_lines.length].each do |line|
-      new_variable = line.split(': ')
-      @request_hash[new_variable[0]] = new_variable[1]
-    end
-  end
-
   def check_the_path
-    if @request_hash["path"] == "/"
+    if @request_object.request_hash["Path"] == "/"
       send_response
-      @client.puts @request_hash
-    elsif @request_hash["path"] == "/hello"
+      @client.puts @request_object.request_hash
+    elsif @request_object.request_hash["Path"] == "/hello"
       send_response
       hello_world
-    elsif @request_hash["path"] == "/shutdown"
+    elsif @request_object.request_hash["Path"] == "/shutdown"
       send_response
       shutdown
-    elsif @request_hash["path"] == "/datetime"
+    elsif @request_object.request_hash["Path"] == "/datetime"
       send_response
       datetime
     end

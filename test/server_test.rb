@@ -40,6 +40,10 @@ class ServerTest < Minitest::Test
   def test_it_can_parse_a_request
     response = Faraday.get('http://127.0.0.1:9292/')
 
-    
+    assert response.body.include?("Port")
+    assert response.body.include?("9292")
+    assert response.body.include?("Host")
+    assert response.body.include?("Path")
+    assert response.body.include?("Accept")
   end
 end
