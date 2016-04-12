@@ -7,7 +7,7 @@ class Server
   def initialize
     @tcp_server = TCPServer.new(9292)
     # @client #@tcp_server.accept
-    @count_requests = 1
+    @count_requests = 0
     # @request_lines = []
     start_server
   end
@@ -16,6 +16,7 @@ class Server
     loop do
       @request_lines = []
       @client = @tcp_server.accept
+      @count_requests += 1
       get_request
       parse_request
       @client.close
@@ -37,7 +38,6 @@ class Server
       new_variable = line.split(': ')
       @request_hash[new_variable[0]] = new_variable[1]
     end
-    @client.puts @request_hash
     check_the_path
   end
 
@@ -58,20 +58,18 @@ class Server
   end
 
   def hello_world
-      output = "<html><head></head><body>#{"Hello World (#{@count_requests}) and this is our request #{@request_lines}"}</body></html>"
+      output = "<html><head></head><body>#{"Hello World (#{@count_requests})\n This is our request: #{@request_lines}"}</body></html>"
         @client.puts output
-      @count_requests += 1
   end
 
   def shutdown
-    output = "<html><head></head><body>#{"Total Requests: 12"}</body></html>"
+    output = "<html><head></head><body>#{"Total Requests: #{@count_requests}"}</body></html>"
     @client.puts output
     @tcp_server.close
   end
 
   def datetime
-    time = Time.new #probably want a whole separate format the time method
-    output = "<html><head></head><body>#{Time.new.ctime}</body></html>"
+    output = "<html><head></head><body>#{Time.now.strftime('%l:%M%p on %A, %B %e, %Y')}</body></html>"
     @client.puts output
   end
 
