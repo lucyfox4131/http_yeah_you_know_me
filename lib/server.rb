@@ -40,26 +40,27 @@ class Server
   end
 
   def check_the_path
-    if @request_object.request_hash["Path"] == "/"
+    path = @request_object.request_hash["Path"]
+    if path == "/"
       send_response
       @client.puts @request_object.request_hash
-    elsif @request_object.request_hash["Path"] == "/hello"
+    elsif path == "/hello"
       send_response
       hello_world
-    elsif @request_object.request_hash["Path"] == "/shutdown"
+    elsif path == "/shutdown"
       send_response
       shutdown
-    elsif @request_object.request_hash["Path"] == "/datetime"
+    elsif path == "/datetime"
       send_response
       datetime
-    elsif @request_object.request_hash["Path"].include?('/word_search')
+    elsif path.include?('/word_search')
       send_response
       word_search
-    elsif @request_object.request_hash["Path"] == '/start_game'
+    elsif path == '/start_game'
       start_game
-    elsif @request_object.request_hash["Path"] == '/game'
+    elsif path == '/game'
       game
-    elsif @request_object.request_hash["Path"] == '/force_error'
+    elsif path == '/force_error'
       system_error
     else
       unknown_path
@@ -88,25 +89,25 @@ class Server
   end
 
   def hello_world
-    @client.puts "<html><head></head><body>#{"Hello World (#{@count_requests})\n This is our request: #{@request_lines}"}</body></html>"
+    @client.puts "Hello World (#{@count_requests})\nCurrent request:\n#{@request_object.formatted_diagnostic}"
   end
 
   def shutdown
-    @client.puts "<html><head></head><body>#{"Total Requests: #{@count_requests}"}</body></html>"
+    @client.puts "Total Requests: #{@count_requests}\nCurrent request:\n#{@request_object.formatted_diagnostic}"
     @tcp_server.close
   end
 
   def datetime
-    @client.puts "<html><head></head><body>#{Time.now.strftime('%l:%M%p on %A, %B %e, %Y')}</body></html>"
+    @client.puts "#{Time.now.strftime('%l:%M%p on %A, %B %e, %Y')}\nCurrent request:\n#{@request_object.formatted_diagnostic}"
   end
 
   def word_search
     words = File.readlines('/usr/share/dict/words').map {|x| x.chomp.downcase}
     test_word = @request_object.request_hash["Path"][/word=.*/][5..-1]
     if words.include?(test_word.downcase)
-      @client.puts "<html><head></head><body>#{test_word.upcase} is a known word</body></html>"
+      @client.puts "#{test_word.upcase} is a known word \nCurrent request:\n#{@request_object.formatted_diagnostic}"
     else
-      @client.puts "<html><head></head><body>#{test_word.upcase} is not a known word</body></html>"
+      @client.puts "#{test_word.upcase} is not a known word \nCurrent request:\n#{@request_object.formatted_diagnostic}"
     end
   end
 
