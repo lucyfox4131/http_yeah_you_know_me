@@ -113,7 +113,7 @@ class Server
   def game_get
     send_response
     user_guess = @post_body.to_i
-    if 0 <= user_guess && user_guess <= 100
+    if check_if_valid_guess(user_guess)
       @num_guesses += 1
       if user_guess < @rand_number
         @client.puts "That guess is too low. Try again! You've taken #{@num_guesses} guesses."
@@ -122,8 +122,15 @@ class Server
       else
         @client.puts "WOOHOO You've won the game. Great guess! You took #{@num_guesses} guesses."
       end
-    else
+    end
+  end
+
+  def check_if_valid_guess(user_guess)
+    if @post_body.empty? || user_guess < 0 || user_guess > 100
       @client.puts "Sorry, that is not a valid guess. Please enter a number between 0 and 100."
+      return false
+    else
+      return true
     end
   end
 
