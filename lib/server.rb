@@ -34,7 +34,7 @@ class Server
   def check_if_post
     if @request_object.request_hash["Verb"] == "POST"
       content_length = @request_object.request_hash["Content-Length"].to_i
-      puts @client.read(content_length)
+      @post_body = @client.read(content_length)
     end
   end
 
@@ -54,6 +54,10 @@ class Server
     elsif @request_object.request_hash["Path"].include?('/word_search')
       send_response
       word_search
+    elsif @request_object.request_hash["Path"].include?('/start_game')
+      start_game
+    elsif @request_object.request_hash["Path"].include?('/game')
+      game
     end
   end
 
@@ -85,7 +89,43 @@ class Server
     end
   end
 
+  def start_game
+    send_response
+    @num_guesses = 0
+    @client.puts "Good luck!"
+    @rand_number = rand(101)
+  end
 
+  def game
+    if @request_object.request_hash["Verb"] == "POST"
+      game_post_redirect
+    elsif @request_object.request_hash["Verb"] == "GET"
+      game_get
+    end
+  end
+
+  def game_post_redirect
+    status = "HTTP/1.1 302 Moved Temporarily\n"
+    location = "Location: http://127.0.0.1:9292/game\n\r"
+    @client.puts status + location
+  end
+
+  def game_get
+    send_response
+    user_guess = @post_body.to_i
+    if 0 <= user_guess && user_guess <= 100
+      @num_guesses += 1
+      if user_guess < @rand_number
+        @client.puts "That guess is too low. Try again! You've taken #{@num_guesses} guesses."
+      elsif user_guess > @rand_number
+        @client.puts "That guess is too high. Try again! You've taken #{@num_guesses} guesses."
+      else
+        @client.puts "WOOHOO You've won the game. Great guess! You took #{@num_guesses} guesses."
+      end
+    else
+      @client.puts "Sorry, that is not a valid guess. Please enter a number between 0 and 100."
+    end
+  end
 
 end
 
