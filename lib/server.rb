@@ -9,6 +9,7 @@ class Server
     @tcp_server = TCPServer.new(9292)
     @request_object = Request.new
     @count_requests = 0
+    @game_in_progess = false
     start_server
   end
 
@@ -54,16 +55,36 @@ class Server
     elsif @request_object.request_hash["Path"].include?('/word_search')
       send_response
       word_search
-    elsif @request_object.request_hash["Path"].include?('/start_game')
+    elsif @request_object.request_hash["Path"] == '/start_game'
       start_game
-    elsif @request_object.request_hash["Path"].include?('/game')
+    elsif @request_object.request_hash["Path"] == '/game'
       game
+    elsif @request_object.request_hash["Path"] == '/force_error'
+      system_error
+    else
+      unknown_path
     end
   end
 
   def send_response
     status = "HTTP/1.1 200 OK\n\r"
     @client.puts status
+  end
+
+  def unknown_path
+    status = "HTTP/1.1 404 Not Found\n\r"
+    @client.puts status
+  end
+
+  def forbidden
+    status = "HTTP/1.1 403 Forbidden\n\r"
+    @client.puts status
+  end
+
+  def system_error
+    status = "HTTP/1.1 500 Internal Server Error\n\r"
+    @client.puts status
+    @client.puts "<html><head></head><body><pre>#{caller.join("\r\n")}</pre></body></html>"
   end
 
   def hello_world
@@ -90,10 +111,23 @@ class Server
   end
 
   def start_game
-    send_response
-    @num_guesses = 0
-    @client.puts "Good luck!"
-    @rand_number = rand(101)
+    if game_not_in_progress?
+      @game_in_progess = true
+      @num_guesses = 0
+      @client.puts "Good luck!"
+      @rand_number = rand(101)
+    end
+  end
+
+  def game_not_in_progress?
+    if @game_in_progess
+      forbidden
+      @client.puts "Game already in progress."
+      return false
+    else
+      send_response
+      return true
+    end
   end
 
   def game
@@ -120,6 +154,7 @@ class Server
       elsif user_guess > @rand_number
         @client.puts "That guess is too high. Try again! You've taken #{@num_guesses} guesses."
       else
+        @game_in_progess = false
         @client.puts "WOOHOO You've won the game. Great guess! You took #{@num_guesses} guesses."
       end
     end
