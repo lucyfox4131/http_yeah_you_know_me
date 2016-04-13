@@ -19,6 +19,7 @@ class Server
       @count_requests += 1
       get_request
       @request_object.parse_request(@request_lines)
+      check_if_post
       check_the_path
       @client.close
     end
@@ -27,6 +28,13 @@ class Server
   def get_request
     while line = @client.gets and !line.chomp.empty?
       @request_lines << line.chomp
+    end
+  end
+
+  def check_if_post
+    if @request_object.request_hash["Verb"] == "POST"
+      content_length = @request_object.request_hash["Content-Length"].to_i
+      puts @client.read(content_length)
     end
   end
 
@@ -43,6 +51,9 @@ class Server
     elsif @request_object.request_hash["Path"] == "/datetime"
       send_response
       datetime
+    elsif @request_object.request_hash["Path"].include?('/word_search')
+      send_response
+      word_search
     end
   end
 
@@ -64,8 +75,16 @@ class Server
     @client.puts "<html><head></head><body>#{Time.now.strftime('%l:%M%p on %A, %B %e, %Y')}</body></html>"
   end
 
-# 11:07AM on Sunday, November 1, 2015.
-# on #{Time.new.wday}, #{Time.new.month} #{Time.new.day}, #{Time.new.year}
+  def word_search
+    words = File.readlines('/usr/share/dict/words').map {|x| x.chomp.downcase}
+    test_word = @request_object.request_hash["Path"][/word=.*/][5..-1]
+    if words.include?(test_word.downcase)
+      @client.puts "<html><head></head><body>#{test_word.upcase} is a known word</body></html>"
+    else
+      @client.puts "<html><head></head><body>#{test_word.upcase} is not a known word</body></html>"
+    end
+  end
+
 
 
 end

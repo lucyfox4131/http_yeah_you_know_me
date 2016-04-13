@@ -46,4 +46,25 @@ class ServerTest < Minitest::Test
     assert response.body.include?("Path")
     assert response.body.include?("Accept")
   end
+
+  def test_it_can_find_a_word
+    response = Faraday.get('http://127.0.0.1:9292/word_search?word=common')
+    assert response.body.include?("COMMON is a known word")
+  end
+
+  def test_it_knows_when_word_is_not_a_real_word
+    response = Faraday.get('http://127.0.0.1:9292/word_search?word=asdf')
+    assert response.body.include?("ASDF is not a known word")
+  end
+
+  def test_it_can_handle_all_upercase_letters
+    response = Faraday.get('http://127.0.0.1:9292/word_search?word=COMMON')
+    assert response.body.include?("COMMON is a known word")
+  end
+
+  def test_it_can_handle_word_with_upper_and_lower_case
+    response = Faraday.get('http://127.0.0.1:9292/word_search?word=cOmMoN')
+    assert response.body.include?("COMMON is a known word")
+  end
+
 end
