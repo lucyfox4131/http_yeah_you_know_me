@@ -34,6 +34,9 @@ class Response
     if possible_matches.empty?
       matches_hash = {"word" => test_word, "is_word" => false}
       client.puts JSON.generate(matches_hash)
+    elsif possible_matches.count == 1
+      matches_hash = {"word" => test_word, "is_word" => true}
+      client.puts JSON.generate(matches_hash)
     else
       matches_hash = {"word" => possible_matches[0], "is_word" => true, "possible_matches" => possible_matches}
       client.puts JSON.generate(matches_hash)

@@ -47,6 +47,7 @@ class Server
     path = @request_object.request_hash["Path"]
     if path == "/"
       send_response
+      @client.puts @request_object.request_hash
       @client.puts @request_object.formatted_diagnostic
     elsif path == "/hello"
       send_response

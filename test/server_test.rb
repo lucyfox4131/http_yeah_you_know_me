@@ -1,4 +1,5 @@
 require "./lib/server"
+require 'json'
 require "./test/test_helper"
 
 class ServerTest < Minitest::Test
@@ -101,6 +102,42 @@ class ServerTest < Minitest::Test
   def test_can_get_error_status
     response = Faraday.get('http://127.0.0.1:9292/force_error')
     assert_equal 500, response.status
+  end
+
+  def test_it_can_find_a_word_using_json
+    conn = Faraday.new(:url => 'http://127.0.0.1:9292')
+    response = conn.get do |req|
+      req.url '/word_search?word=pizz'
+      req.headers['Accept'] = 'application/json'
+    end
+
+    hash = {"word":"pizza","is_word":true,"possible_matches":["pizza","pizzeria","pizzicato","pizzle"]}
+
+    assert_equal JSON.generate(hash), response.body.chomp
+  end
+
+  def test_it_can_find_if_a_word_is_not_a_word_using_json
+    conn = Faraday.new(:url => 'http://127.0.0.1:9292')
+    response = conn.get do |req|
+      req.url '/word_search?word=skjdfh'
+      req.headers['Accept'] = 'application/json'
+    end
+
+    hash = {"word":"skjdfh","is_word":false}
+
+    assert_equal JSON.generate(hash), response.body.chomp
+  end
+
+  def test_it_can_find_only_one_possible_word_using_json
+    conn = Faraday.new(:url => 'http://127.0.0.1:9292')
+    response = conn.get do |req|
+      req.url '/word_search?word=halfback'
+      req.headers['Accept'] = 'application/json'
+    end
+
+    hash = {"word":"halfback","is_word":true}
+
+    assert_equal JSON.generate(hash), response.body.chomp
   end
 
 end
