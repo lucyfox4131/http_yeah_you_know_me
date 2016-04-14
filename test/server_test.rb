@@ -72,12 +72,23 @@ class ServerTest < Minitest::Test
     assert response.body.include?("CO11ON is not a known word")
   end
 
-  def test_it_can_start_game_and_know_if_started
+  def test_it_is_new_instance_of_game_class
+    game = Game.new
+    assert_equal Game, game.class
+  end
+
+  def test_it_can_start_and_run_game_with_redirect
     conn = Faraday.new(:url => 'http://127.0.0.1:9292')
     response1 = conn.post '/start_game'
     response2 = conn.post '/start_game'
+    response3 = conn.post './game'
+    response4 = conn.get './game'
 
     assert_equal "Good luck!\n", response1.body
+    assert_equal 200, response1.status
+    assert_equal 302, response3.status
+    assert_equal 200, response4.status
+    assert response4.body.include?("guess")
     assert_equal "Game already in progress.\n", response2.body
     assert_equal 403, response2.status
   end

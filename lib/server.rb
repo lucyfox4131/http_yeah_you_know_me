@@ -14,7 +14,6 @@ class Server
     @response_object = Response.new
     @game_object = Game.new
     @count_requests = 0
-    @count_hello_requests = 0
     start_server
   end
 
