@@ -1,5 +1,6 @@
 require 'socket'
 require './lib/request'
+require './lib/game'
 
 class Server
 
@@ -43,18 +44,14 @@ class Server
     path = @request_object.request_hash["Path"]
     if path == "/"
       send_response
-      @client.puts @request_object.request_hash
+      @client.puts @request_object.formatted_diagnostic
     elsif path == "/hello"
-      send_response
       hello_world
     elsif path == "/shutdown"
-      send_response
       shutdown
     elsif path == "/datetime"
-      send_response
       datetime
     elsif path.include?('/word_search')
-      send_response
       word_search
     elsif path == '/start_game'
       start_game
@@ -85,23 +82,30 @@ class Server
   def system_error
     status = "HTTP/1.1 500 Internal Server Error\n\r"
     @client.puts status
-    @client.puts "<html><head></head><body><pre>#{caller.join("\r\n")}</pre></body></html>"
+    @client.puts "#{caller.join("\r\n")}"
+    @client.puts raise SystemError
+    #here we could change the language in the response to txt so we don't have problem with main
   end
 
   def hello_world
+    send_response
     @client.puts "Hello World (#{@count_requests})\nCurrent request:\n#{@request_object.formatted_diagnostic}"
   end
 
   def shutdown
+    send_response
     @client.puts "Total Requests: #{@count_requests}\nCurrent request:\n#{@request_object.formatted_diagnostic}"
     @tcp_server.close
   end
 
   def datetime
+    send_response
     @client.puts "#{Time.now.strftime('%l:%M%p on %A, %B %e, %Y')}\nCurrent request:\n#{@request_object.formatted_diagnostic}"
+    #we are having the problem here because it is padding with a space instead of a 0
   end
 
   def word_search
+    send_response
     words = File.readlines('/usr/share/dict/words').map {|x| x.chomp.downcase}
     test_word = @request_object.request_hash["Path"][/word=.*/][5..-1]
     if words.include?(test_word.downcase)
