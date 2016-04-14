@@ -67,4 +67,29 @@ class ServerTest < Minitest::Test
     assert response.body.include?("COMMON is a known word")
   end
 
+  def test_it_can_handle_letters_or_numbers
+    response = Faraday.get('http://127.0.0.1:9292/word_search?word=co11on')
+    assert response.body.include?("CO11ON is not a known word")
+  end
+
+  def test_it_can_start_game_and_know_if_started
+    conn = Faraday.new(:url => 'http://127.0.0.1:9292')
+    response1 = conn.post '/start_game'
+    response2 = conn.post '/start_game'
+
+    assert_equal "Good luck!\n", response1.body
+    assert_equal "Game already in progress.\n", response2.body
+    assert_equal 403, response2.status
+  end
+
+  def test_error_404_for_unknown_page
+    response = Faraday.get('http://127.0.0.1:9292/ssssss')
+    assert_equal 404, response.status
+  end
+
+  def test_can_get_error_status
+    response = Faraday.get('http://127.0.0.1:9292/force_error')
+    assert_equal 500, response.status
+  end
+
 end

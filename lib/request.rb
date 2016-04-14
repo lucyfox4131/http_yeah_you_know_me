@@ -3,18 +3,35 @@ class Request
   attr_reader :request_hash, :formatted_diagnostic
 
   def parse_request(request_lines)
-    verb = request_lines[0].split[0]
-    path = request_lines[0].split[1]
-    protocol = request_lines[0].split[2]
-    host = request_lines[1].split(': ')[1].split(':')[0]
-    port = request_lines[1].split(': ')[1].split(':')[1]
-    @request_hash = {"Verb" => verb, "Path" => path, "Protocol" => protocol, "Host" => host, "Port" => port}
+    initialize_hash
+    parse_first_line(request_lines)
+    parse_second_line(request_lines)
+    parse_remaining_lines(request_lines)
+    format_request
+    @request_hash
+  end
+
+  def initialize_hash
+    @request_hash = {}
+  end
+
+  def parse_first_line(request_lines)
+    @request_hash["Verb"] = request_lines[0].split[0]
+    @request_hash["Path"] = request_lines[0].split[1]
+    @request_hash["Protocol"] = request_lines[0].split[2]
+  end
+
+  def parse_second_line(request_lines)
+    @request_hash["Host"] = request_lines[1].split(': ')[1].split(':')[0]
+    @request_hash["Port"] = request_lines[1].split(': ')[1].split(':')[1]
+  end
+  
+  def parse_remaining_lines(request_lines)
     request_lines[2...request_lines.length].each do |line|
       new_variable = line.split(': ')
       @request_hash[new_variable[0]] = new_variable[1]
     end
     @request_hash
-    format_request
   end
 
   def format_request

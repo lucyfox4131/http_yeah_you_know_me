@@ -1,6 +1,7 @@
 require 'socket'
 require './lib/request'
 require './lib/game'
+require './lib/system_error'
 
 class Server
 
@@ -10,6 +11,7 @@ class Server
     @tcp_server = TCPServer.new(9292)
     @request_object = Request.new
     @count_requests = 0
+    @count_hello_requests = 0
     @game_in_progess = false
     start_server
   end
@@ -83,13 +85,18 @@ class Server
     status = "HTTP/1.1 500 Internal Server Error\n\r"
     @client.puts status
     @client.puts "#{caller.join("\r\n")}"
-    @client.puts raise SystemError
+    begin
+      @client.puts raise SystemError
+    rescue SystemError
+      @client.puts "THIS WAS RESCUED!"
+    end
     #here we could change the language in the response to txt so we don't have problem with main
   end
 
   def hello_world
     send_response
-    @client.puts "Hello World (#{@count_requests})\nCurrent request:\n#{@request_object.formatted_diagnostic}"
+    @count_hello_requests+=1
+    @client.puts "Hello World (#{@count_hello_requests})\nCurrent request:\n#{@request_object.formatted_diagnostic}"
   end
 
   def shutdown
@@ -100,7 +107,7 @@ class Server
 
   def datetime
     send_response
-    @client.puts "#{Time.now.strftime('%l:%M%p on %A, %B %e, %Y')}\nCurrent request:\n#{@request_object.formatted_diagnostic}"
+    @client.puts "#{Time.now.strftime('%r:%M%p on %A, %B %e, %Y')}\nCurrent request:\n#{@request_object.formatted_diagnostic}"
     #we are having the problem here because it is padding with a space instead of a 0
   end
 
