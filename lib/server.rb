@@ -68,7 +68,6 @@ class Server
       system_error
     elsif path == '/sleepy'
       send_response
-      @t.sleep
       @client.puts "yawn..."
     else
       unknown_path
