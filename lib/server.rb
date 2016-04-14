@@ -1,4 +1,5 @@
 require 'socket'
+require 'thread'
 require './lib/request'
 require './lib/game'
 require './lib/response'
@@ -19,8 +20,8 @@ class Server
 
   def start_server
     loop do
-      @request_lines = []
       @client = @tcp_server.accept
+      @request_lines = []
       @count_requests += 1
       get_request
       @request_object.parse_request(@request_lines)
@@ -47,7 +48,6 @@ class Server
     path = @request_object.request_hash["Path"]
     if path == "/"
       send_response
-      @client.puts @request_object.request_hash
       @client.puts @request_object.formatted_diagnostic
     elsif path == "/hello"
       send_response
@@ -66,6 +66,10 @@ class Server
       @game_object.game(@client, @request_object, @post_body)
     elsif path == '/force_error'
       system_error
+    elsif path == '/sleepy'
+      send_response
+      @t.sleep
+      @client.puts "yawn..."
     else
       unknown_path
     end
